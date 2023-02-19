@@ -1,4 +1,3 @@
-
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -8,11 +7,14 @@
 
 typedef enum{
   TK_RESERVED,
+  TK_ID,
   TK_NUM,
   TK_EOF,
 } TokenKind;
 
 typedef enum{
+  ND_ASSIGN,
+  ND_LOCAL,
   ND_ADD,
   ND_SUB,
   ND_MUL,
@@ -40,12 +42,13 @@ struct Node{
   Node *lhs;
   Node *rhs;
   int val;
+  int offset;
 };
 
 extern Token *token;
 extern char *code_head;
 
-
 extern Token *tokenize(char *);
-extern Node *expr();
+extern Node *code[100];
+extern void program();
 extern void gen(Node *);

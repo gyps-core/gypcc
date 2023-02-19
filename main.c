@@ -2,6 +2,7 @@
 
 char *code_head;
 Token *token;
+Node *code[100];
 
 int main(int argc, char **argv){
   if(argc !=2){
@@ -10,15 +11,23 @@ int main(int argc, char **argv){
   }
   code_head= argv[1];
   token = tokenize(argv[1]);
-  Node *node = expr();
-
+  program();
   printf(".intel_syntax noprefix\n");
   printf(".global main\n");
   printf("main:\n");
 
-  gen(node);
-  printf("  pop rax\n");
+  // prologue
+  printf("  push rbp\n");
+  printf("  mov rbp, rsp\n");
+  printf("  sub rsp, 208\n");
 
+  for (int i = 0; code[i]; i++){
+    gen(code[i]);
+    printf("  pop rax\n");//to prevent the stack overglowing.
+  }
+  //epilogue
+  printf("  mov rsp, rbp\n");
+  printf("  pop rbp\n");
   printf("  ret\n");
   return 0;
 }

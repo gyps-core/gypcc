@@ -16,7 +16,7 @@ assert(){
   fi
 }
 
-assert 5 "5"
+assert 5 "5;"
 assert 1 "+1"
 assert 4 "2*2"
 assert 2 "4/2"
@@ -30,5 +30,8 @@ assert 0 "4==5"
 assert 1 "5 == 2+3"
 assert 1 "3< 4*4"
 assert 1 "5>=5"
+assert 1 "a = b = 1;"
+assert 1 "1;"
+assert 11 "a = 11"
 echo OK
 

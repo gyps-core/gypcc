@@ -47,6 +47,14 @@ int expect_number(){
   return val;
 }
 
+char *expect_id(){
+  if(token->kind != TK_ID)
+    error(token,"unexpected token");
+  char *str = token->str;
+  token = token->next;
+  return str;
+}
+
 bool at_eof(){
   return token->kind == TK_EOF;
 }
@@ -66,7 +74,7 @@ Token *tokenize(char *p){
       p +=2;
       continue;
     }
-    if(*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')' ||*p == '<'||*p=='>'){
+    if(*p == ';' || *p == '=' || *p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')' ||*p == '<'||*p=='>'){
       cur = new_token(TK_RESERVED,cur,p++,1);
       continue;
     }
@@ -75,6 +83,11 @@ Token *tokenize(char *p){
       char *q = p;
       cur->val=strtol(p,&p,10);
       cur->len = p-q;
+      continue;
+    }
+    if('a'<= *p && *p <='z'){
+      cur = new_token(TK_ID, cur, p++, 0);
+      cur->len =1;
       continue;
     }
     error(cur,"invailed token");
@@ -99,7 +112,11 @@ Node *new_node_num(int val){
   return node;
 }
 
+Node *code[100];
+void program();
+Node *stmt();
 Node *expr();
+Node *assign();
 Node *equal();
 Node *relational();
 Node *add();
@@ -107,8 +124,30 @@ Node *mul();
 Node *unary();
 Node *primary();
 
+void program(){
+  int i = 0;
+  while(!at_eof()){
+    code[i]=stmt();
+    i++;
+  }
+  code[i] = NULL;
+}
+
+Node *stmt(){
+  Node *node = expr();
+  consume(";");
+  return node;
+}
+
 Node *expr(){
-  return equal();
+  return assign();
+}
+
+Node *assign(){
+  Node *node = equal();
+  if(consume("="))
+    node = new_node(ND_ASSIGN, node, assign());
+  return node;
 }
 
 Node *equal(){
@@ -196,6 +235,12 @@ Node *primary(){
   if (consume("(")){
     Node *node = expr();
     consume(")");
+    return node;
+  }
+  if (token->kind == TK_ID){
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = ND_LOCAL;
+    node->offset = (expect_id()[0] - 'a'+1)*8;
     return node;
   }
   return new_node_num(expect_number());
