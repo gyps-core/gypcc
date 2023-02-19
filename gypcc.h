@@ -28,6 +28,7 @@ typedef enum{
 
 typedef struct Node Node;
 typedef struct Token Token;
+typedef struct LVar LVar;
 
 struct Token{
   TokenKind kind;
@@ -35,6 +36,13 @@ struct Token{
   int val;
   char *str;
   int len;
+};
+
+struct LVar{
+  LVar *next;
+  char *name;
+  int len;
+  int offset;
 };
 
 struct Node{
@@ -46,8 +54,8 @@ struct Node{
 };
 
 extern Token *token;
+extern LVar *locals;
 extern char *code_head;
-
 extern Token *tokenize(char *);
 extern Node *code[100];
 extern void program();

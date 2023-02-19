@@ -33,5 +33,10 @@ assert 1 "5>=5"
 assert 1 "a = b = 1;"
 assert 1 "1;"
 assert 11 "a = 11"
+
+assert 1 "abc = 1;"
+assert 2 "a = bc =2;"
+assert 3 "a=1; b=a+2;"
+
 echo OK
 

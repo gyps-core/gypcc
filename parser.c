@@ -25,6 +25,19 @@ bool fwdmatch(char *s, char *t){
   return memcmp(s,t,strlen(t))==0;
 }
 
+bool isnondigit(char c){
+  return c == '_' || ('a'<=c&&c<'z'||'A'<=c&&c<='Z');
+}
+
+int len_id(char *p){
+  int len = 0;
+  while(isnondigit(*p) || isdigit(*p)){
+    p++;
+    len++;
+  }
+  return len;
+}
+
 //トークンの解析
 bool consume(char *op){
   if(token->kind != TK_RESERVED || strlen(op) != token->len || memcmp(token->str, op, token->len))
@@ -85,9 +98,10 @@ Token *tokenize(char *p){
       cur->len = p-q;
       continue;
     }
-    if('a'<= *p && *p <='z'){
-      cur = new_token(TK_ID, cur, p++, 0);
-      cur->len =1;
+    if(isnondigit(*p)){
+      cur = new_token(TK_ID, cur, p, 0);
+      cur->len =len_id(p);
+      p+=cur->len;
       continue;
     }
     error(cur,"invailed token");
@@ -110,6 +124,15 @@ Node *new_node_num(int val){
   node->kind = ND_NUM;
   node->val = val;
   return node;
+}
+
+// find variables.
+LVar *find_lvar(){
+  for(LVar *var = locals; var; var = var->next){
+    if(var->len==token->len&&memcmp(var->name, token->str, var->len)==0)
+      return var;
+  }
+  return NULL;
 }
 
 Node *code[100];
@@ -240,7 +263,20 @@ Node *primary(){
   if (token->kind == TK_ID){
     Node *node = calloc(1, sizeof(Node));
     node->kind = ND_LOCAL;
-    node->offset = (expect_id()[0] - 'a'+1)*8;
+
+    LVar *lvar =find_lvar();
+    if(lvar)
+      node->offset = lvar->offset;
+    else{
+      lvar = calloc(1,sizeof(LVar));
+      lvar->next=locals;
+      lvar->name=token->str;
+      lvar->len=token->len;
+      lvar->offset=locals->offset+8;
+      node->offset=lvar->offset;
+      locals=lvar;
+    }
+    token = token->next;
     return node;
   }
   return new_node_num(expect_number());

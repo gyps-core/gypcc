@@ -3,6 +3,7 @@
 char *code_head;
 Token *token;
 Node *code[100];
+LVar *locals;
 
 int main(int argc, char **argv){
   if(argc !=2){
@@ -11,6 +12,7 @@ int main(int argc, char **argv){
   }
   code_head= argv[1];
   token = tokenize(argv[1]);
+  locals = calloc(1, sizeof(LVar));
   program();
   printf(".intel_syntax noprefix\n");
   printf(".global main\n");
@@ -19,7 +21,7 @@ int main(int argc, char **argv){
   // prologue
   printf("  push rbp\n");
   printf("  mov rbp, rsp\n");
-  printf("  sub rsp, 208\n");
+  printf("  sub rsp, 16\n");
 
   for (int i = 0; code[i]; i++){
     gen(code[i]);
