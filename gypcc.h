@@ -10,6 +10,7 @@ typedef enum{
   TK_ID,
   TK_NUM,
   TK_EOF,
+  TK_RET,
 } TokenKind;
 
 typedef enum{
@@ -24,6 +25,7 @@ typedef enum{
   ND_NEQ,
   ND_LT,
   ND_LEQ,
+  ND_RET,
 } NodeKind;
 
 typedef struct Node Node;

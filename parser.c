@@ -40,7 +40,7 @@ int len_id(char *p){
 
 //トークンの解析
 bool consume(char *op){
-  if(token->kind != TK_RESERVED || strlen(op) != token->len || memcmp(token->str, op, token->len))
+  if(strlen(op) != token->len || memcmp(token->str, op, token->len))
     return false;
   token = token->next;
   return true;
@@ -80,6 +80,11 @@ Token *tokenize(char *p){
   while(*p){
     if (isspace(*p)){
       p++;
+      continue;
+    }
+    if(fwdmatch(p, "return")&&isspace(p[6])){
+      cur = new_token(TK_RET, cur, p,6);
+      p+=6;
       continue;
     }
     if(fwdmatch(p,"==")||fwdmatch(p,"!=")||fwdmatch(p,"<=")||fwdmatch(p,">=")){
@@ -157,9 +162,15 @@ void program(){
 }
 
 Node *stmt(){
-  Node *node = expr();
-  consume(";");
-  return node;
+  Node *node;
+  if(consume("return")){
+    node=calloc(1, sizeof(node));
+    node->kind=ND_RET;
+    node->lhs =expr();
+  }else
+    node = expr();
+  if(consume(";"))return node;
+  else error(token, "expected ';'");
 }
 
 Node *expr(){

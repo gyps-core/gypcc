@@ -28,6 +28,13 @@ void gen(Node *node){
     case ND_NUM:
       printf("  push %d\n", node->val);
       return;
+    case ND_RET:
+      gen(node->lhs);
+      printf("  pop rax\n");
+      printf("  mov rsp, rbp\n");
+      printf("  pop rbp\n");
+      printf("  ret\n");
+      return;
   }
 
   gen(node->lhs);
@@ -50,22 +57,22 @@ void gen(Node *node){
       printf("  cqo\n");
       printf("  idiv rdi\n");
       break;
-  case ND_EQ:
+    case ND_EQ:
       printf("  cmp rax, rdi\n");
       printf("  sete al\n");
       printf("  movzb rax, al\n");
       break;
-  case ND_NEQ:
+    case ND_NEQ:
       printf("  cmp rax, rdi\n");
       printf("  setne al\n");
       printf("  movzb rax, al\n");
       break;
-  case ND_LT:
+    case ND_LT:
       printf("  cmp rax, rdi\n");
       printf("  setl al\n");
       printf("  movzb rax, al\n");
       break;
-  case ND_LEQ:
+    case ND_LEQ:
       printf("  cmp rax, rdi\n");
       printf("  setle al\n");
       printf("  movzb rax, al\n");
