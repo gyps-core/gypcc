@@ -1,5 +1,6 @@
 #include "gypcc.h"
 
+int label_num =2;
 //local valriable
 void gen_lval(Node *node){
   if(node->kind != ND_LOCAL)
@@ -11,6 +12,48 @@ void gen_lval(Node *node){
 
 void gen(Node *node){
   switch(node->kind){
+    case ND_IF:
+      gen(node->elms[0]);
+      printf("  pop rax\n");
+      printf("  cmp rax, 0\n");
+      if(node -> elms[2]){
+        printf("  je .L%d\n",label_num);
+        gen(node->elms[1]);
+        printf("  jmp .L%d\n", label_num+1);
+        printf(".L%d:\n", label_num);
+        gen(node->elms[2]);
+        printf(".L%d:\n", label_num+1);
+        label_num+=2;
+      }
+      else{//expression
+        gen(node->elms[1]);
+        label_num+=1;
+      }
+      return;
+    case ND_WHILE:
+      printf(".L%d:\n",label_num);
+      gen(node->elms[0]);
+      printf("  pop rax\n");
+      printf("  cmp rax, 0\n");
+      printf("  je .L%d\n", label_num+1);
+      gen(node->elms[1]);
+      printf("  jmp .L%d\n",label_num);
+      printf(".L%d:\n",label_num+1);
+      label_num++;
+      return;
+    case ND_FOR:
+      gen(node->elms[0]);
+      printf(".L%d:\n",label_num);
+      gen(node->elms[1]);
+      printf("  pop rax\n");
+      printf("  cmp rax, 0\n");
+      printf("  je .L%d\n", label_num+1);
+      gen(node->elms[3]);
+      gen(node->elms[2]);
+      printf("  jmp .L%d\n",label_num);
+      printf(".L%d:\n",label_num+1);
+      label_num++;
+      return;
     case ND_ASSIGN://=
       gen_lval(node->lhs);
       gen(node->rhs);

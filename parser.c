@@ -25,13 +25,16 @@ bool fwdmatch(char *s, char *t){
   return memcmp(s,t,strlen(t))==0;
 }
 
-bool isnondigit(char c){
+bool is_alpha(char c){
   return c == '_' || ('a'<=c&&c<'z'||'A'<=c&&c<='Z');
+}
+bool is_alnum(char c){
+  return is_alpha(c) || isdigit(c);
 }
 
 int len_id(char *p){
   int len = 0;
-  while(isnondigit(*p) || isdigit(*p)){
+  while(is_alnum(*p)){
     p++;
     len++;
   }
@@ -82,9 +85,29 @@ Token *tokenize(char *p){
       p++;
       continue;
     }
-    if(fwdmatch(p, "return")&&isspace(p[6])){
+    if(fwdmatch(p, "return")&&!is_alnum(p[6])){
       cur = new_token(TK_RET, cur, p,6);
       p+=6;
+      continue;
+    }
+    if(fwdmatch(p, "if")&&!is_alnum(p[2])){
+      cur = new_token(TK_IF, cur, p,2);
+      p+=2;
+      continue;
+    }
+    if(fwdmatch(p, "else")&&!is_alnum(p[4])){
+      cur = new_token(TK_ELSE, cur, p,4);
+      p+=4;
+      continue;
+    }
+    if(fwdmatch(p, "while")&&!is_alnum(p[5])){
+      cur = new_token(TK_WHILE, cur, p,5);
+      p+=5;
+      continue;
+    }
+    if(fwdmatch(p, "for")&&!is_alnum(p[3])){
+      cur = new_token(TK_FOR, cur, p,3);
+      p+=3;
       continue;
     }
     if(fwdmatch(p,"==")||fwdmatch(p,"!=")||fwdmatch(p,"<=")||fwdmatch(p,">=")){
@@ -103,7 +126,7 @@ Token *tokenize(char *p){
       cur->len = p-q;
       continue;
     }
-    if(isnondigit(*p)){
+    if(is_alpha(*p)){
       cur = new_token(TK_ID, cur, p, 0);
       cur->len =len_id(p);
       p+=cur->len;
@@ -162,15 +185,48 @@ void program(){
 }
 
 Node *stmt(){
-  Node *node;
+  Node *node=calloc(1, sizeof(Node));
   if(consume("return")){
-    node=calloc(1, sizeof(node));
     node->kind=ND_RET;
     node->lhs =expr();
-  }else
+    if(!consume(";"))error(token,"expected ';'");
+  }
+  else if(consume("if")){
+    if(!consume("("))error(token,"expected '('");
+    node->kind = ND_IF;
+    node->elms = calloc(3, sizeof(Node));
+    node->elms[0] = expr();
+    if(!consume(")"))error(token,"expected ')'");
+    node->elms[1] = stmt();
+    if(consume("else")){
+      node->elms[2] = stmt();
+    }
+  }
+  else if(consume("while")){
+    if(!consume("("))error(token,"expected '('");
+    node->kind = ND_WHILE;
+    node->elms = calloc(2, sizeof(Node));
+    node->elms[0] = expr();
+    if(!consume(")"))error(token,"expected ')'");
+    node->elms[1] = stmt();
+  }
+  else if(consume("for")){
+    if(!consume("("))error(token,"expected '('");
+    node->kind = ND_FOR;
+    node->elms = calloc(4, sizeof(Node));
+    node->elms[0] = expr();
+    if(!consume(";"))error(token,"expected ';'");
+    node->elms[1] = expr();
+    if(!consume(";"))error(token,"expected ';'");
+    node->elms[2] = expr();
+    if(!consume(")"))error(token,"expected ')'");
+    node->elms[3] = stmt();
+  }
+  else{
     node = expr();
-  if(consume(";"))return node;
-  else error(token, "expected ';'");
+    if(!consume(";"))error(token,"expected ';'");
+  }
+  return node;
 }
 
 Node *expr(){

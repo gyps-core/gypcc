@@ -39,5 +39,9 @@ assert 2 "a = bc =2;"
 assert 3 "a=1; b=a+2;"
 assert 3 "a=1; b= 2;return a+b;"
 
+assert 1 "if(2 ==3)0;1;"
+assert 1 "if(1== 3) 0; else 1;"
+assert 4 "a = 0; while(a<4) a=a+1; return a;"
+assert 4 "a = 0; for(i = 0; i<4;i=i+1) a=a+1; return a;"
 echo OK
 
